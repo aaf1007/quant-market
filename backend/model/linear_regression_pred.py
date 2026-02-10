@@ -15,10 +15,15 @@ days = 1 # Predict num days ahead
 # Fetch price data for training the model
 price = stock_data.history(period="1y") # gets 1 year of data
 price["Target"] = price["Close"].shift(-days) # target is the next day's close price
-price = price.dropna() # remove rows with NaN values
+
+# Custom Features
+price["Moving_Average_60"] = price["Close"].rolling(window=60).mean() # 10 day moving average
+price["Rolling_STD_60"] = price["Close"].rolling(window=60).std() # 10 day rolling standard deviation
+
+price = price.dropna() # remove rows with NaN values (must be after all feature creation)
 
 # Linear Regression Equation: y = mx
-X = price[["Close", "Volume", "High"]] # features are the close prices
+X = price[["Close", "Volume", "Moving_Average_60", "Rolling_STD_60"]] # features are the close prices
 y = price["Target"]
 
 # Split data into training and testing sets (80% training, 20% testing)
@@ -37,6 +42,7 @@ rmse = root_mean_squared_error(y_test, y_pred)
 
 print(f"Features Used: {X_train.columns.tolist()}")
 
-print("Mean Squared Error: ", mse)
-print("Root Mean Squared Error: ", rmse)
+print("Mean Squared Error: ", round(mse, 2))
+print("Root Mean Squared Error: ", round(rmse, 2))
+
 
